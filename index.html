@@ -51,8 +51,6 @@
       const files = Array.from(event.dataTransfer.files).map((file) => file.path);
       const droppedFiles = ipcRenderer.sendSync('get-dropped-files', files);
 
-      fileList.innerHTML = ''; // Clear the previous list
-
       droppedFiles.forEach((filePath) => {
         const listItem = document.createElement('li');
         listItem.textContent = filePath;

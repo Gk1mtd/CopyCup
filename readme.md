@@ -35,3 +35,4 @@ npm start
 8. Click the "Copy to Selected Folder" button to copy all collected files and folders to the selected folder.
 
 ## Screenshots
+![grafik](https://github.com/Gk1mtd/CopyCup/assets/15696019/e4354bb1-b130-4f81-9b79-3540510b4bd6)

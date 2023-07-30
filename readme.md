@@ -2,6 +2,7 @@
 
 CopyCup is a simple Electron application that allows you to drag and drop files and folders into a window. The paths of the dropped items will be collected and displayed in a list. You can then copy all the collected files and folders to a pre-selected target folder.
 
+Tested on Linux Mint only - Please tell me, if its works on Windows or Mac or other Linux Systems.
 ## Features
 
 - Drag and drop files and folders into the application window.

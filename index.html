@@ -26,6 +26,23 @@
     #file-list li {
       margin-bottom: 10px;
     }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .file-item button {
+      margin-left: 10px;
+    }
+
+    #action-buttons {
+      margin-top: 20px;
+    }
+
+    #action-buttons button {
+      margin-right: 10px;
+    }
   </style>
 </head>
 
@@ -35,11 +52,20 @@
     <p>Drag and drop files or folders here.</p>
   </div>
   <ul id="file-list"></ul>
+  <div id="action-buttons">
+    <button id="select-folder-button">Select Target Folder</button>
+    <button id="copy-button">Copy to Selected Folder</button>
+  </div>
   <script>
     const { ipcRenderer } = require('electron');
 
     const dropArea = document.getElementById('drop-area');
     const fileList = document.getElementById('file-list');
+    const selectFolderButton = document.getElementById('select-folder-button');
+    const copyButton = document.getElementById('copy-button');
+
+    const selectedFiles = [];
+    let targetDirectory = null;
 
     dropArea.addEventListener('dragover', (event) => {
       event.preventDefault();
@@ -49,13 +75,58 @@
     dropArea.addEventListener('drop', (event) => {
       event.preventDefault();
       const files = Array.from(event.dataTransfer.files).map((file) => file.path);
-      const droppedFiles = ipcRenderer.sendSync('get-dropped-files', files);
+      selectedFiles.push(...files);
+      updateFileList();
+    });
 
-      droppedFiles.forEach((filePath) => {
+    function updateFileList() {
+      fileList.innerHTML = ''; // Clear the previous list
+
+      selectedFiles.forEach((filePath) => {
         const listItem = document.createElement('li');
-        listItem.textContent = filePath;
+        listItem.classList.add('file-item');
+
+        const fileLabel = document.createElement('span');
+        fileLabel.textContent = filePath;
+        listItem.appendChild(fileLabel);
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        listItem.appendChild(removeButton);
+
+        removeButton.addEventListener('click', () => {
+          const index = selectedFiles.indexOf(filePath);
+          if (index !== -1) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+          }
+        });
+
         fileList.appendChild(listItem);
       });
+    }
+
+    selectFolderButton.addEventListener('click', () => {
+      ipcRenderer.send('open-folder-dialog');
+    });
+
+    ipcRenderer.on('selected-folder', (event, folderPath) => {
+      targetDirectory = folderPath;
+    });
+
+    copyButton.addEventListener('click', () => {
+      if (!targetDirectory) {
+        alert('Please select a target folder first.');
+        return;
+      }
+
+      const success = ipcRenderer.sendSync('copy-files', selectedFiles, targetDirectory);
+
+      if (success) {
+        alert('Files copied successfully!');
+      } else {
+        alert('Error copying files. Please check the console for details.');
+      }
     });
   </script>
 </body>

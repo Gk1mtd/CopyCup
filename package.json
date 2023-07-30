@@ -1,0 +1,15 @@
+{
+  "name": "file_collector_app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^25.3.2",
+    "electron-rebuild": "^3.2.9"
+  }
+}

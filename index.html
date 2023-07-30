@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>File Collector</title>
+  <style>
+    /* Add some basic styling to the drop area */
+    #drop-area {
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #888;
+      cursor: pointer;
+    }
+
+    #file-list {
+      margin-top: 20px;
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #file-list li {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>File Collector</h1>
+  <div id="drop-area">
+    <p>Drag and drop files or folders here.</p>
+  </div>
+  <ul id="file-list"></ul>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const dropArea = document.getElementById('drop-area');
+    const fileList = document.getElementById('file-list');
+
+    dropArea.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy'; // Show a "copy" cursor while dragging
+    });
+
+    dropArea.addEventListener('drop', (event) => {
+      event.preventDefault();
+      const files = Array.from(event.dataTransfer.files).map((file) => file.path);
+      const droppedFiles = ipcRenderer.sendSync('get-dropped-files', files);
+
+      fileList.innerHTML = ''; // Clear the previous list
+
+      droppedFiles.forEach((filePath) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = filePath;
+        fileList.appendChild(listItem);
+      });
+    });
+  </script>
+</body>
+
+</html>

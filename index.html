@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="UTF-8">
   <title>File Collector</title>
   <style>
-    /* Add some basic styling to the drop area */
     #drop-area {
       border: 2px dashed #ccc;
       border-radius: 10px;
@@ -32,44 +30,37 @@
       justify-content: space-between;
     }
 
-    .file-item button {
+    .file-item .status {
       margin-left: 10px;
     }
 
-    #action-buttons {
-      margin-top: 20px;
+    .file-item .status.pending {
+      color: yellow;
     }
 
-    #action-buttons button {
-      margin-right: 10px;
+    .file-item .status.done {
+      color: green;
     }
   </style>
 </head>
-
 <body>
   <h1>File Collector</h1>
   <div id="drop-area">
     <p>Drag and drop files or folders here.</p>
   </div>
   <ul id="file-list"></ul>
-  <div id="action-buttons">
-    <button id="select-folder-button">Select Target Folder</button>
-    <button id="copy-button">Copy to Selected Folder</button>
-  </div>
   <script>
     const { ipcRenderer } = require('electron');
 
     const dropArea = document.getElementById('drop-area');
     const fileList = document.getElementById('file-list');
-    const selectFolderButton = document.getElementById('select-folder-button');
-    const copyButton = document.getElementById('copy-button');
 
     const selectedFiles = [];
     let targetDirectory = null;
 
     dropArea.addEventListener('dragover', (event) => {
       event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy'; // Show a "copy" cursor while dragging
+      event.dataTransfer.dropEffect = 'copy';
     });
 
     dropArea.addEventListener('drop', (event) => {
@@ -80,7 +71,7 @@
     });
 
     function updateFileList() {
-      fileList.innerHTML = ''; // Clear the previous list
+      fileList.innerHTML = '';
 
       selectedFiles.forEach((filePath) => {
         const listItem = document.createElement('li');
@@ -90,45 +81,37 @@
         fileLabel.textContent = filePath;
         listItem.appendChild(fileLabel);
 
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        listItem.appendChild(removeButton);
-
-        removeButton.addEventListener('click', () => {
-          const index = selectedFiles.indexOf(filePath);
-          if (index !== -1) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-          }
-        });
+        const statusSpan = document.createElement('span');
+        statusSpan.classList.add('status', 'pending');
+        statusSpan.textContent = 'Copying...';
+        listItem.appendChild(statusSpan);
 
         fileList.appendChild(listItem);
+
+        ipcRenderer.send('copy-files', [filePath], targetDirectory);
+
+        ipcRenderer.on('copy-status', (event, status) => {
+          if (status.filePath === filePath) {
+            if (status.success) {
+              statusSpan.textContent = 'Done';
+              statusSpan.classList.remove('pending');
+              statusSpan.classList.add('done');
+            } else {
+              statusSpan.textContent = 'Error';
+              statusSpan.classList.remove('pending');
+              statusSpan.classList.add('error');
+            }
+          }
+        });
       });
     }
 
-    selectFolderButton.addEventListener('click', () => {
-      ipcRenderer.send('open-folder-dialog');
-    });
+    ipcRenderer.send('open-folder-dialog');
 
     ipcRenderer.on('selected-folder', (event, folderPath) => {
       targetDirectory = folderPath;
     });
 
-    copyButton.addEventListener('click', () => {
-      if (!targetDirectory) {
-        alert('Please select a target folder first.');
-        return;
-      }
-
-      const success = ipcRenderer.sendSync('copy-files', selectedFiles, targetDirectory);
-
-      if (success) {
-        alert('Files copied successfully!');
-      } else {
-        alert('Error copying files. Please check the console for details.');
-      }
-    });
   </script>
 </body>
-
 </html>

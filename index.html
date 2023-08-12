@@ -20,6 +20,8 @@
     <script>
       // Import Electron's IPCRenderer module
       const { ipcRenderer } = require("electron");
+      // Increase the maximum number of listeners for the "copy-status" event
+      ipcRenderer.setMaxListeners(24); // You can adjust the number as needed
 
       // Get references to DOM elements
       const dropArea = document.getElementById("drop-area");

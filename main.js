@@ -72,47 +72,49 @@ app.on("activate", () => {
 });
 
 // Event listener for IPC messages related to copying files
-ipcMain.on("copy-files", (event, files, targetDirectory) => {
+ipcMain.on("copy-files", async (event, files, targetDirectory) => {
   // Recursive function to copy files and directories
-  const copyRecursive = (source, target) => {
-    const fileStats = fs.statSync(source);
+  const copyRecursive = async (source, target) => {
+    try {
+      const fileStats = await fs.promises.stat(source);
 
-    if (fileStats.isDirectory()) {
-      // Create target directory if it doesn't exist
-      if (!fs.existsSync(target)) {
-        fs.mkdirSync(target);
-      }
+      if (fileStats.isDirectory()) {
+        try {
+          await fs.promises.access(target);
+        } catch (error) {
+          await fs.promises.mkdir(target);
+        }
 
-      // Read and copy files within the directory
-      const files = fs.readdirSync(source);
-      files.forEach((file) => {
-        const currentSource = path.join(source, file);
-        const currentTarget = path.join(target, file);
-        copyRecursive(currentSource, currentTarget);
-      });
-    } else if (fileStats.isFile()) {
-      // Copy the file if it hasn't been copied before
-      if (!copiedFiles.has(source)) {
-        copiedFiles.add(source);
-        fs.copyFileSync(source, target);
+        const files = await fs.promises.readdir(source);
+
+        for (const file of files) {
+          const currentSource = path.join(source, file);
+          const currentTarget = path.join(target, file);
+          await copyRecursive(currentSource, currentTarget);
+        }
+      } else if (fileStats.isFile()) {
+        if (!copiedFiles.has(source)) {
+          copiedFiles.add(source);
+          await fs.promises.copyFile(source, target);
+          console.log("done with copy: ", source);
+        }
       }
+    } catch (error) {
+      console.error("Error copying file:", error);
+      throw error; // Rethrow the error to be caught outside
     }
   };
 
-  // Copy each selected file to the target directory
-  files.forEach((file) => {
+  for (const file of files) {
     const fileName = path.basename(file);
     const targetPath = path.join(targetDirectory, fileName);
 
     try {
-      // Copy the file or directory recursively
-      copyRecursive(file, targetPath);
-      // Send success status to the renderer process
+      await copyRecursive(file, targetPath);
       event.sender.send("copy-status", { filePath: file, success: true });
     } catch (error) {
       console.error("Error copying file:", error);
-      // Send error status to the renderer process
       event.sender.send("copy-status", { filePath: file, success: false });
     }
-  });
+  }
 });

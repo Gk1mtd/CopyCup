@@ -1,117 +1,80 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>File Collector</title>
-  <style>
-    #drop-area {
-      border: 2px dashed #ccc;
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      color: #888;
-      cursor: pointer;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>File Collector</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+  </head>
+  <body>
+    <h1>File Collector</h1>
+    <div id="drop-area">
+      <p>Drag and drop files or folders here.</p>
+    </div>
+    <ul id="file-list"></ul>
+    <script>
+      const { ipcRenderer } = require("electron");
 
-    #file-list {
-      margin-top: 20px;
-      list-style-type: none;
-      padding: 0;
-    }
+      const dropArea = document.getElementById("drop-area");
+      const fileList = document.getElementById("file-list");
 
-    #file-list li {
-      margin-bottom: 10px;
-    }
+      const selectedFiles = [];
+      let targetDirectory = null;
 
-    .file-item {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .file-item .status {
-      margin-left: 10px;
-    }
-
-    .file-item .status.pending {
-      color: yellow;
-    }
-
-    .file-item .status.done {
-      color: green;
-    }
-  </style>
-</head>
-<body>
-  <h1>File Collector</h1>
-  <div id="drop-area">
-    <p>Drag and drop files or folders here.</p>
-  </div>
-  <ul id="file-list"></ul>
-  <script>
-    const { ipcRenderer } = require('electron');
-
-    const dropArea = document.getElementById('drop-area');
-    const fileList = document.getElementById('file-list');
-
-    const selectedFiles = [];
-    let targetDirectory = null;
-
-    dropArea.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-    });
-
-    dropArea.addEventListener('drop', (event) => {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer.files).map((file) => file.path);
-      selectedFiles.push(...files);
-      updateFileList();
-    });
-
-    function updateFileList() {
-      fileList.innerHTML = '';
-
-      selectedFiles.forEach((filePath) => {
-        const listItem = document.createElement('li');
-        listItem.classList.add('file-item');
-
-        const fileLabel = document.createElement('span');
-        fileLabel.textContent = filePath;
-        listItem.appendChild(fileLabel);
-
-        const statusSpan = document.createElement('span');
-        statusSpan.classList.add('status', 'pending');
-        statusSpan.textContent = 'Copying...';
-        listItem.appendChild(statusSpan);
-
-        fileList.appendChild(listItem);
-
-        ipcRenderer.send('copy-files', [filePath], targetDirectory);
-
-        ipcRenderer.on('copy-status', (event, status) => {
-          if (status.filePath === filePath) {
-            if (status.success) {
-              statusSpan.textContent = 'Done';
-              statusSpan.classList.remove('pending');
-              statusSpan.classList.add('done');
-            } else {
-              statusSpan.textContent = 'Error';
-              statusSpan.classList.remove('pending');
-              statusSpan.classList.add('error');
-            }
-          }
-        });
+      dropArea.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
       });
-    }
 
-    ipcRenderer.send('open-folder-dialog');
+      dropArea.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const files = Array.from(event.dataTransfer.files).map(
+          (file) => file.path
+        );
+        selectedFiles.push(...files);
+        updateFileList();
+      });
 
-    ipcRenderer.on('selected-folder', (event, folderPath) => {
-      targetDirectory = folderPath;
-    });
+      function updateFileList() {
+        fileList.innerHTML = "";
 
-  </script>
-</body>
+        selectedFiles.forEach((filePath) => {
+          const listItem = document.createElement("li");
+          listItem.classList.add("file-item");
+
+          const fileLabel = document.createElement("span");
+          fileLabel.textContent = filePath;
+          listItem.appendChild(fileLabel);
+
+          const statusSpan = document.createElement("span");
+          statusSpan.classList.add("status", "pending");
+          statusSpan.textContent = "Copying...";
+          listItem.appendChild(statusSpan);
+
+          fileList.appendChild(listItem);
+
+          ipcRenderer.send("copy-files", [filePath], targetDirectory);
+
+          ipcRenderer.on("copy-status", (event, status) => {
+            if (status.filePath === filePath) {
+              if (status.success) {
+                statusSpan.textContent = "Done";
+                statusSpan.classList.remove("pending");
+                statusSpan.classList.add("done");
+              } else {
+                statusSpan.textContent = "Error";
+                statusSpan.classList.remove("pending");
+                statusSpan.classList.add("error");
+              }
+            }
+          });
+        });
+      }
+
+      ipcRenderer.send("open-folder-dialog");
+
+      ipcRenderer.on("selected-folder", (event, folderPath) => {
+        targetDirectory = folderPath;
+      });
+    </script>
+  </body>
 </html>

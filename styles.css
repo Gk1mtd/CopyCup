@@ -1,38 +1,46 @@
 /* styles.css */
+
+/* Styling for the drop area where files can be dragged and dropped */
 #drop-area {
-  border: 2px dashed #ccc;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: bold;
-  color: #888;
-  cursor: pointer;
+  border: 2px dashed #ccc; /* Dashed border */
+  border-radius: 10px; /* Rounded corners */
+  padding: 20px; /* Spacing inside the area */
+  text-align: center; /* Center align text */
+  font-size: 18px; /* Font size */
+  font-weight: bold; /* Bold text */
+  color: #888; /* Text color */
+  cursor: pointer; /* Show pointer cursor on hover */
 }
 
+/* Styling for the list of selected files */
 #file-list {
-  margin-top: 20px;
-  list-style-type: none;
-  padding: 0;
+  margin-top: 20px; /* Spacing from the top */
+  list-style-type: none; /* Remove bullet points */
+  padding: 0; /* No padding */
 }
 
+/* Styling for each individual file item in the list */
 #file-list li {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* Spacing between items */
 }
 
+/* Styling for the file item container */
 .file-item {
-  display: flex;
-  justify-content: space-between;
+  display: flex; /* Flex layout */
+  justify-content: space-between; /* Space between elements */
 }
 
+/* Styling for the status label of each file item */
 .file-item .status {
-  margin-left: 10px;
+  margin-left: 10px; /* Spacing from the left */
 }
 
+/* Styling for the pending status label */
 .file-item .status.pending {
-  color: rgb(255, 106, 0);
+  color: rgb(255, 106, 0); /* Orange color for pending status */
 }
 
+/* Styling for the done status label */
 .file-item .status.done {
-  color: green;
+  color: green; /* Green color for done status */
 }

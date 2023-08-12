@@ -6,54 +6,76 @@
     <link rel="stylesheet" type="text/css" href="styles.css" />
   </head>
   <body>
+    <!-- Page title -->
     <h1>File Collector</h1>
+
+    <!-- Drop area for files -->
     <div id="drop-area">
       <p>Drag and drop files or folders here.</p>
     </div>
+
+    <!-- List to display selected files and their copy status -->
     <ul id="file-list"></ul>
+
     <script>
+      // Import Electron's IPCRenderer module
       const { ipcRenderer } = require("electron");
 
+      // Get references to DOM elements
       const dropArea = document.getElementById("drop-area");
       const fileList = document.getElementById("file-list");
 
+      // Array to store selected file paths
       const selectedFiles = [];
+      // Target directory for copying files
       let targetDirectory = null;
 
+      // Event listener for dragover event on drop area
       dropArea.addEventListener("dragover", (event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
+        event.dataTransfer.dropEffect = "copy"; // Allow copying
       });
 
+      // Event listener for drop event on drop area
       dropArea.addEventListener("drop", (event) => {
         event.preventDefault();
+        // Extract file paths from dropped files
         const files = Array.from(event.dataTransfer.files).map(
           (file) => file.path
         );
+        // Add selected files to the array
         selectedFiles.push(...files);
+        // Update the displayed file list
         updateFileList();
       });
 
+      // Function to update the file list display
       function updateFileList() {
-        fileList.innerHTML = "";
+        fileList.innerHTML = ""; // Clear the list
 
         selectedFiles.forEach((filePath) => {
+          // Create a list item for each file
           const listItem = document.createElement("li");
           listItem.classList.add("file-item");
 
+          // Display the file path
           const fileLabel = document.createElement("span");
           fileLabel.textContent = filePath;
           listItem.appendChild(fileLabel);
 
+          // Display the copy status
           const statusSpan = document.createElement("span");
           statusSpan.classList.add("status", "pending");
           statusSpan.textContent = "Copying...";
           listItem.appendChild(statusSpan);
 
+          // Add the list item to the file list
           fileList.appendChild(listItem);
 
+          // Send a request to copy the file using IPCRenderer
           ipcRenderer.send("copy-files", [filePath], targetDirectory);
 
+          // Listen for copy status updates from the main process
           ipcRenderer.on("copy-status", (event, status) => {
             if (status.filePath === filePath) {
               if (status.success) {
@@ -70,10 +92,12 @@
         });
       }
 
+      // Send a request to open a folder dialog
       ipcRenderer.send("open-folder-dialog");
 
+      // Listen for the selected folder path from the main process
       ipcRenderer.on("selected-folder", (event, folderPath) => {
-        targetDirectory = folderPath;
+        targetDirectory = folderPath; // Store the selected folder
       });
     </script>
   </body>
